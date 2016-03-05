@@ -3,7 +3,6 @@ package dduHandler
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -18,7 +17,7 @@ func LineScanner(path string, wg *sync.WaitGroup) (chan []byte, chan struct{}, e
 	chDone := make(chan struct{})
 	var fileCount, lineCount int
 
-	go func(path string) error {
+	go func(path string, chOut chan []byte, chDone chan struct{}) error {
 
 		defer wg.Done()
 		files := listFiles(path)
@@ -35,19 +34,20 @@ func LineScanner(path string, wg *sync.WaitGroup) (chan []byte, chan struct{}, e
 			}
 			defer f.Close()
 
-			r := bufio.NewReader(f)
-
 			for {
-				l, p, err := r.ReadLine()
-				if err == io.EOF {
-					break
+
+				scanner := bufio.NewScanner(f)
+				for scanner.Scan() {
+					l := scanner.Text()
+					chOut <- []byte(l)
+
 				}
-				if err != nil {
-					return fmt.Errorf("Readline Error: %v", err)
+				if err := scanner.Err(); err != nil {
+					fmt.Fprintln(os.Stderr, "reading standard input:", err)
 				}
-				fmt.Println("Prefix: ", p)
+
 				lineCount++
-				chOut <- l
+
 			}
 		}
 
@@ -57,7 +57,7 @@ func LineScanner(path string, wg *sync.WaitGroup) (chan []byte, chan struct{}, e
 		close(chOut)
 
 		return nil
-	}(path)
+	}(path, chOut, chDone)
 
 	return chOut, chDone, nil
 }
