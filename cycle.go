@@ -51,9 +51,9 @@ func LineDecode(chIn chan []byte, chDone chan struct{}, wg *sync.WaitGroup) (cha
 				var d DDUData
 				err := xml.Unmarshal(l, &d)
 				if err != nil && err != io.EOF {
-					fmt.Println("Line: ", string(l))
-					log.Fatalf("XML Unmarshall Err: %v", err)
-
+					log.Println("Line: ", string(l))
+					log.Printf("XML Unmarshall Err: %v", err)
+					continue
 				}
 
 				for _, v := range d.Params {
@@ -106,7 +106,7 @@ func LineDecode(chIn chan []byte, chDone chan struct{}, wg *sync.WaitGroup) (cha
 
 //readCSV
 func readCSV(csvdata string) ([]string, error) {
-	//fmt.Println(csvdata)
+
 	r := csv.NewReader(strings.NewReader(csvdata))
 
 	data, err := r.Read()
