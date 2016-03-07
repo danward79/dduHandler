@@ -13,7 +13,7 @@ import (
 )
 
 //LineScanner provides a channel of lines from the imported files
-func LineScanner(path string, wg *sync.WaitGroup) (chan []byte, chan struct{}, error) { //chan struct{}, error) {
+func LineScanner(path string, wg *sync.WaitGroup) (chan []byte, chan struct{}, error) {
 	wg.Add(1)
 	chOut := make(chan []byte)
 	chDone := make(chan struct{})

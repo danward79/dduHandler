@@ -37,11 +37,12 @@ type Cycle struct {
 }
 
 //LineDecode ...
-func LineDecode(chIn chan []byte, chDone chan struct{}, wg *sync.WaitGroup) (chan Cycle, error) {
+func LineDecode(chIn chan []byte, chDone chan struct{}, wg *sync.WaitGroup) (chan Cycle, chan struct{}, error) {
 	wg.Add(1)
 	chOut := make(chan Cycle)
+	chComplete := make(chan struct{})
 
-	go func(chIn chan []byte, chOut chan Cycle) {
+	go func(chIn chan []byte, chOut chan Cycle, chComplete chan struct{}) {
 		defer wg.Done()
 		var c Cycle
 
@@ -96,12 +97,14 @@ func LineDecode(chIn chan []byte, chDone chan struct{}, wg *sync.WaitGroup) (cha
 				}
 
 			case <-chDone:
+				close(chOut)
+				chComplete <- struct{}{}
 				return
 			}
 		}
 
-	}(chIn, chOut)
-	return chOut, nil
+	}(chIn, chOut, chComplete)
+	return chOut, chComplete, nil
 }
 
 //readCSV
